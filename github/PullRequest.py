@@ -531,16 +531,18 @@ class PullRequest(github.GithubObject.CompletableGithubObject):
     def get_reviewer_requests(self):
         """
         :calls: `GET /repos/:owner/:repo/pulls/:number/requested_reviewers <https://developer.github.com/v3/pulls/review_requests/>`_
-        :rtype: :class:`github.PaginatedList.PaginatedList` of :class:`github.InspectionReviewers.InspectionReviewers`
+        :rtype: list of :class:`github.PullRequestReviewerRequest.PullRequestReviewerRequest`
         """
-        return github.PaginatedList.PaginatedList(
-            github.PullRequestReviewerRequest.PullRequestReviewerRequest,
-            self._requester,
+        headers, data = self._requester.requestJsonAndCheck(
+            "GET",
             self.url + "/requested_reviewers",
             None,
-            headers={'Accept': 'application/vnd.github.black-cat-preview+json'},
-            list_item='users'
+            headers={'Accept': 'application/vnd.github.black-cat-preview+json'}
         )
+        return [
+            github.PullRequestReviewerRequest.PullRequestReviewerRequest(self._requester, headers, element, completed=True)
+            for element in data['users'] if element is not None
+        ]
 
     def is_merged(self):
         """
